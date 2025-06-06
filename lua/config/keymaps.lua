@@ -3,3 +3,4 @@
 -- Add any additional keymaps here
 
 vim.keymap.set("n", "<leader>bw", ":write<CR>", { desc = "Write current buffer to DASD" })
+vim.keymap.set("n", "<leader>bc", ":ConvertEpigraph<CR>", { desc = "Convert all epigraphs to quotes" })
