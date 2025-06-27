@@ -1,79 +1,178 @@
 local M = {}
 
+-- Contractions (after normalizing apostrophes to straight quote)
 local contractions = {
-  ["I’m"] = "I am",
-  ["aren’t"] = "are not",
-  ["can’t"] = "cannot",
-  ["didn’t"] = "did not",
-  ["doesn’t"] = "does not",
-  ["don’t"] = "do not",
-  ["hadn’t"] = "had not",
-  ["hasn’t"] = "has not",
-  ["haven’t"] = "have not",
-  ["he’s"] = "he is",
-  ["isn’t"] = "is not",
-  ["it’s"] = "it is",
-  ["let’s"] = "let us",
-  ["she’s"] = "she is",
-  ["that’s"] = "that is",
-  ["there’s"] = "there is",
-  ["they’re"] = "they are",
-  ["wasn’t"] = "was not",
-  ["weren’t"] = "were not",
-  ["we’re"] = "we are",
-  ["what’s"] = "what is",
-  ["who’s"] = "who is",
-  ["won’t"] = "will not",
-  ["you’re"] = "you are",
+  ["[Cc]an't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Cannot" or "cannot"
+  end,
+  ["[Ww]on't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Will not" or "will not"
+  end,
+  ["[Dd]on't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Do not" or "do not"
+  end,
+  ["[Dd]oesn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Does not" or "does not"
+  end,
+  ["[Dd]idn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Did not" or "did not"
+  end,
+  ["[Ii]sn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Is not" or "is not"
+  end,
+  ["[Aa]ren't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Are not" or "are not"
+  end,
+  ["[Ww]asn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Was not" or "was not"
+  end,
+  ["[Ww]eren't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Were not" or "were not"
+  end,
+  ["[Hh]aven't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Have not" or "have not"
+  end,
+  ["[Hh]asn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Has not" or "has not"
+  end,
+  ["[Hh]adn't"] = function(m)
+    return m:sub(1, 1):match("%u") and "Had not" or "had not"
+  end,
+  ["[Ii]'m"] = function(_)
+    return "I am"
+  end,
+  ["[Yy]ou're"] = function(m)
+    return m:sub(1, 1):match("%u") and "You are" or "you are"
+  end,
+  ["[Tt]hey're"] = function(m)
+    return m:sub(1, 1):match("%u") and "They are" or "they are"
+  end,
+  ["[Ww]e're"] = function(m)
+    return m:sub(1, 1):match("%u") and "We are" or "we are"
+  end,
+  ["[Hh]e's"] = function(m)
+    return m:sub(1, 1):match("%u") and "He is" or "he is"
+  end,
+  ["[Ss]he's"] = function(m)
+    return m:sub(1, 1):match("%u") and "She is" or "she is"
+  end,
+  ["[Ii]t's"] = function(m)
+    return m:sub(1, 1):match("%u") and "It is" or "it is"
+  end,
+  ["[Tt]hat's"] = function(m)
+    return m:sub(1, 1):match("%u") and "That is" or "that is"
+  end,
+  ["[Tt]here's"] = function(m)
+    return m:sub(1, 1):match("%u") and "There is" or "there is"
+  end,
+  ["[Ww]ho's"] = function(m)
+    return m:sub(1, 1):match("%u") and "Who is" or "who is"
+  end,
+  ["[Ww]hat's"] = function(m)
+    return m:sub(1, 1):match("%u") and "What is" or "what is"
+  end,
+  ["[Ll]et's"] = function(m)
+    return m:sub(1, 1):match("%u") and "Let us" or "let us"
+  end,
 }
 
--- Helper function: process a single buffer
+-- Normalize curly quotes to straight ASCII apostrophe
+local function normalize_apostrophes(line)
+  -- First normalize curly quotes
+  line = line
+    :gsub("[‘’‛´`ʼʾʿˊˋ]", "'") -- curly apostrophes to straight
+    :gsub("[“”]", '"') -- curly double quotes to straight
+
+  -- Then collapse double+single or other junk into a single apostrophe
+  line = line:gsub("['\"]+", "'") -- any run of ' or " becomes single '
+
+  return line
+end
+
+-- Process a single buffer
 local function process_buffer(bufnr)
+  if not vim.api.nvim_buf_is_valid(bufnr) then
+    return false, 0, {}
+  end
   if not vim.api.nvim_buf_is_loaded(bufnr) then
-    return
+    vim.fn.bufload(bufnr)
   end
   if not vim.bo[bufnr].modifiable then
-    return
+    return false, 0, {}
   end
 
   local name = vim.api.nvim_buf_get_name(bufnr)
   if not name:match("%.tex$") then
-    return
+    return false, 0, {}
   end
 
   local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local count = 0
   local modified = false
+  local unmatched = {}
 
   for i, line in ipairs(lines) do
     local original = line
-    for from, to in pairs(contractions) do
-      line = line:gsub(from, to)
+    line = normalize_apostrophes(line)
+    for pattern, repl in pairs(contractions) do
+      local n = 0
+      line, n = line:gsub(pattern, repl)
+      if n == 0 and original:match(pattern) then
+        unmatched[pattern] = true
+      else
+        count = count + n
+        modified = true
+      end
     end
-    if line ~= original then
-      lines[i] = line
-      modified = true
-    end
+    lines[i] = line
   end
 
   if modified then
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, lines)
   end
+
+  local unmatched_list = vim.tbl_keys(unmatched)
+  return modified, count, unmatched_list
 end
 
--- Main entry point
+-- Main command
 function M.remove_contractions(opts)
   local target = opts.args or ""
+  local total_buffers = 0
+  local total_replacements = 0
+  local all_unmatched = {}
 
   if target == "all" then
-    local bufs = vim.api.nvim_list_bufs()
-    for _, bufnr in ipairs(bufs) do
-      process_buffer(bufnr)
+    for _, bufnr in ipairs(vim.api.nvim_list_bufs()) do
+      local changed, count, unmatched = process_buffer(bufnr)
+      if changed then
+        total_buffers = total_buffers + 1
+        total_replacements = total_replacements + count
+      end
+      for _, pat in ipairs(unmatched) do
+        all_unmatched[pat] = true
+      end
     end
-    print("Contractions removed from all open .tex buffers.")
+    print(string.format("✔ Removed %d contraction(s) across %d buffer(s).", total_replacements, total_buffers))
   else
-    local bufnr = vim.api.nvim_get_current_buf()
-    process_buffer(bufnr)
-    print("Contractions removed from current buffer.")
+    local changed, count, unmatched = process_buffer(vim.api.nvim_get_current_buf())
+    if changed then
+      print(string.format("✔ Removed %d contraction(s) in current buffer.", count))
+    else
+      print("No contractions found in current buffer.")
+    end
+    for _, pat in ipairs(unmatched) do
+      all_unmatched[pat] = true
+    end
+  end
+
+  local unmatched_list = vim.tbl_keys(all_unmatched)
+  if #unmatched_list > 0 then
+    table.sort(unmatched_list)
+    print("⚠️ Patterns matched but not replaced:")
+    for _, pat in ipairs(unmatched_list) do
+      print("  " .. pat)
+    end
   end
 end
 
