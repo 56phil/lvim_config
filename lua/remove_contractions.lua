@@ -78,15 +78,41 @@ local contractions = {
 
 -- Normalize curly quotes to straight ASCII apostrophe
 local function normalize_apostrophes(line)
-  -- First normalize curly quotes
+  -- Normalize curly quotes to straight ones
   line = line
-    :gsub("[‘’‛´`ʼʾʿˊˋ]", "'") -- curly apostrophes to straight
-    :gsub("[“”]", '"') -- curly double quotes to straight
+    :gsub("[‘’‛´`ʼʾʿˊˋ]", "'") -- smart apostrophes to '
+    :gsub("[“”]", '"') -- smart double quotes to "
 
-  -- Then collapse double+single or other junk into a single apostrophe
-  line = line:gsub("['\"]+", "'") -- any run of ' or " becomes single '
+  -- Collapse quote clusters
+  line = line:gsub("['\"]+", "'")
+
+  -- Fix: word ' → word'
+  line = line:gsub("(%w) +'([^%w])", "%1'%2")
+  line = line:gsub("(%w) +'(%w)", "%1'%2")
+
+  -- Ensure spacing after quote before a word
+  line = line:gsub("'(%w)", "' %1")
 
   return line
+end
+
+local function remove_unprintables(line)
+  -- Define a conservative whitelist pattern:
+  -- Keep: basic Latin, Latin-1, typographic punctuation, en/em dash
+  return line:gsub(
+    "[^\x20-\x7E" -- printable ASCII
+      .. "\xA0-\xFF" -- Latin-1 supplement
+      .. "\u{2018}-\u{201F}" -- smart quotes, narrow no-break, etc.
+      .. "\u{2000}-\u{200D}" -- thin space, zero-width space
+      .. "\u{2020}-\u{2023}" -- dagger, bullet
+      .. "\u{2030}-\u{203E}" -- per mille, quotes, overline
+      .. "\u{2044}" -- fraction slash
+      .. "\u{20AC}" -- Euro
+      .. "\u{2212}" -- minus sign
+      .. "\u{00B0}" -- degree
+      .. "]",
+    " "
+  )
 end
 
 -- Process a single buffer
@@ -114,6 +140,7 @@ local function process_buffer(bufnr)
   for i, line in ipairs(lines) do
     local original = line
     line = normalize_apostrophes(line)
+    line = remove_unprintables(line)
     for pattern, repl in pairs(contractions) do
       local n = 0
       line, n = line:gsub(pattern, repl)
