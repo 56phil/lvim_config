@@ -9,15 +9,3 @@ vim.keymap.set("n", "<leader>ba", ":RemoveContractions all<CR>", { desc = "Remov
 vim.keymap.set("n", "]s", "]s", { desc = "Next Spelling Error" })
 vim.keymap.set("n", "[s", "[s", { desc = "Previous Spelling Error" })
 vim.keymap.set("n", "z=", "z=", { desc = "Suggest Correction" })
--- e.g., in ~/.config/nvim/lua/config/keymaps.lua
-local ls = require("luasnip")
-vim.keymap.set({ "i", "s" }, "<C-k>", function()
-  if ls.expand_or_jumpable() then
-    ls.expand_or_jump()
-  end
-end, { silent = true })
-vim.keymap.set({ "i", "s" }, "<C-j>", function()
-  if ls.jumpable(-1) then
-    ls.jump(-1)
-  end
-end, { silent = true })
