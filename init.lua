@@ -17,3 +17,5 @@ vim.api.nvim_create_autocmd("BufNewFile", {
   pattern = "*.py",
   command = "0r ~/.config/nvim/templates/skeleton.py",
 })
+
+vim.g.vimtex_compiler_enabled = 0

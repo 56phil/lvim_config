@@ -8,7 +8,7 @@ return {
             build = {
               executable = "xelatex",
               args = { "-interaction=nonstopmode", "-synctex=1", "%f" },
-              onSave = true,
+              onSave = false,
               forwardSearchAfter = false,
             },
             forwardSearch = {
