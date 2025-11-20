@@ -51,3 +51,14 @@ require("lazy").setup({
     },
   },
 })
+
+-- Load my options, keymaps, and autocmds after LazyVim starts
+vim.api.nvim_create_autocmd("User", {
+  pattern = "VeryLazy",
+  callback = function()
+    pcall(require, "config.options")
+    pcall(require, "config.keymaps")
+    -- pcall(require, "config.autocmds")
+  end,
+})
+
