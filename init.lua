@@ -19,3 +19,5 @@ vim.api.nvim_create_autocmd("BufNewFile", {
 })
 
 vim.g.vimtex_compiler_enabled = 0
+vim.api.nvim_set_hl(0, "StatusLineSpecial", { fg = "#ffffff", bg = "#aa0000", bold = true })
+vim.o.statusline = "%#StatusLineSpecial#%{&buftype!='' ? '['.&buftype.'] ' : ''}%#StatusLine#%f %m %r %= %l:%c"
