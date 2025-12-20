@@ -3,7 +3,7 @@
 -- Add any additional keymaps here
 
 -- Write all buffers
-vim.keymap.set("n", "<leader>bA", ":wall<CR>", {
+vim.keymap.set("n", "<leader>bW", ":wall<CR>", {
   desc = "Write all buffers to DASD",
   silent = true,
 })
