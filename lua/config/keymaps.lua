@@ -8,6 +8,24 @@ vim.keymap.set("n", "<leader>bW", ":wall<CR>", {
   silent = true,
 })
 
+-- :q<CR>
+vim.keymap.set("n", "<leader>bx", ":q<CR>", {
+  desc = ":q<CR>",
+  silent = true,
+})
+
+-- :q!<CR>
+vim.keymap.set("n", "<leader>bX", ":q!<CR>", {
+  desc = ":q!<CR>",
+  silent = true,
+})
+
+-- Write & delete buffer 
+vim.keymap.set("n", "<leader>bx", ":w |  bd<CR>", {
+  desc = "write & delete buffer",
+  silent = true,
+})
+
 -- Buffer write
 vim.keymap.set("n", "<leader>bw", ":write<CR>", {
   desc = "Write current buffer to DASD",
@@ -24,4 +42,4 @@ vim.keymap.set("n", "]s", "]s", { desc = "Next Spelling Error" })
 vim.keymap.set("n", "[s", "[s", { desc = "Previous Spelling Error" })
 vim.keymap.set("n", "z=", "z=", { desc = "Suggest Correction" })
 vim.keymap.set("n", "<leader>bc", ":RemoveContractions<CR>", { desc = "Remove contractions" })
-vim.keymap.set("n", "<leader>ba", ":RemoveContractions all<CR>", { desc = "Remove contractions from all buffers" })
+vim.keymap.set("n", "<leader>bC", ":RemoveContractions all<CR>", { desc = "Remove contractions from all buffers" })
