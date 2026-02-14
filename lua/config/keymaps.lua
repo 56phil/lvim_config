@@ -9,13 +9,13 @@ vim.keymap.set("n", "<leader>bW", ":wall<CR>", {
 })
 
 -- :q<CR>
-vim.keymap.set("n", "<leader>bx", ":q<CR>", {
+vim.keymap.set("n", "<leader>bq", ":q<CR>", {
   desc = ":q<CR>",
   silent = true,
 })
 
 -- :q!<CR>
-vim.keymap.set("n", "<leader>bX", ":q!<CR>", {
+vim.keymap.set("n", "<leader>bQ", ":q!<CR>", {
   desc = ":q!<CR>",
   silent = true,
 })
